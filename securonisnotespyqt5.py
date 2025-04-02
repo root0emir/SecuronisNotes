@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEVELOPER: root0emir 
 import sys
 import os
 import json
@@ -11,7 +12,8 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                            QTabWidget, QFrame, QScrollArea, QCheckBox,
                            QSpinBox, QColorDialog, QFontDialog, QMenuBar,
                            QMenu, QAction, QStatusBar, QToolBar, QToolButton,
-                           QInputDialog, QSplitter, QStyle, QStyleFactory)
+                           QInputDialog, QSplitter, QStyle, QStyleFactory,
+                           QStyleOptionButton)
 from PyQt5.QtCore import Qt, QSize, QTimer, QDateTime, QPropertyAnimation, QEasingCurve
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette, QTextCharFormat, QLinearGradient, QPainter
 from cryptography.fernet import Fernet
@@ -27,8 +29,8 @@ class ModernCheckBox(QCheckBox):
                 border-radius: 4px;
             }
             QCheckBox::indicator {
-                width: 20px;
-                height: 20px;
+                width: 24px;
+                height: 24px;
             }
             QCheckBox::indicator:unchecked {
                 border: 2px solid #4d4d4d;
@@ -39,10 +41,12 @@ class ModernCheckBox(QCheckBox):
                 border: 2px solid #4d4d4d;
                 background-color: #4d4d4d;
                 border-radius: 4px;
-                image: url(check.png);
-                image-position: center;
             }
-            QCheckBox::indicator:hover {
+            QCheckBox::indicator:checked:hover {
+                border: 2px solid #5d5d5d;
+                background-color: #5d5d5d;
+            }
+            QCheckBox::indicator:unchecked:hover {
                 border: 2px solid #5d5d5d;
                 background-color: #3d3d3d;
             }
@@ -52,6 +56,22 @@ class ModernCheckBox(QCheckBox):
             }
         """)
         self.setCursor(Qt.PointingHandCursor)
+        
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self.isChecked():
+            painter = QPainter(self)
+            painter.setPen(Qt.white)
+            painter.setFont(QFont("Arial", 16))
+            
+            # Checkbox'ın konumunu bul
+            style = self.style()
+            opt = QStyleOptionButton()
+            self.initStyleOption(opt)
+            indicator_rect = style.subElementRect(QStyle.SE_CheckBoxIndicator, opt, self)
+            
+            # Tik işaretini checkbox'ın tam ortasına çiz
+            painter.drawText(indicator_rect, Qt.AlignCenter | Qt.AlignVCenter, "✓")
 
 class ModernButton(QPushButton):
     def __init__(self, text, parent=None):
@@ -752,6 +772,9 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(archived_btn)
         
     def setup_reminder(self, state):
+        if not self.current_note:
+            self.current_note = Note()
+            
         if state == Qt.Checked:
             dialog = QDialog(self)
             dialog.setWindowTitle("Set Reminder")
